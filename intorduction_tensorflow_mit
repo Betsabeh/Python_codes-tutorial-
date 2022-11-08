@@ -1,0 +1,112 @@
+import tensorflow as tf
+import numpy as np
+import matplotlib as plt
+#-----------------------------
+sprot=tf.constant('tennis')
+print('sprot is {}-d tensor'.format(tf.rank(sprot).numpy()))
+print('sprot shape is {}'.format(tf.shape(sprot).numpy()))
+#-------2D tensor
+matrix= np.array([[1,2,3],[4,5,6]])
+print(matrix)
+matrix=tf.convert_to_tensor(matrix)
+assert isinstance(matrix,tf.Tensor), "the object should be tensor"
+assert tf.rank(matrix).numpy()==2
+print(matrix[1].numpy())
+print(matrix[:,1].numpy())
+#----------4D tensor
+image=tf.zeros(shape=(10,256,256,3))
+assert isinstance(image,tf.Tensor),"the object should be tensor"
+assert tf.shape(image).numpy().tolist()==[10,256,256,3] ,"image has wrong shape"
+#----------------------function
+def func1(a,b):
+   c=tf.add(a,b)
+   d=tf.subtract(a,b)
+   e=tf.multiply(a,b)
+   return c,d,e
+
+a=matrix[0]
+b=matrix[1]
+c,d,e=func1(a,b)
+print('add={}, subtract={}, multiply={}'.format(c,d,e))
+#------------------------------
+#------------------------------
+#------------------------------
+#-----simple perceptron
+class my_single(tf.keras.layers.Layer):
+  def __init__(self,num_output):
+    super(my_single,self).__init__()
+    self.outputnodes=num_output
+  
+  def build(self,input_shape):
+    d=input_shape[-1] # samples dimension
+    self.W=self.add_weight("weight", shape=[d,self.outputnodes])
+    self.b=self.add_weight("bias",shape=[1,self.outputnodes])
+  
+  def cal(self,x):
+    Z=tf.matmul(x,self.W)
+    Z=tf.add(Z,self.b)
+    out=tf.sigmoid(Z)
+    return out
+
+layer=my_single(3)
+layer.build((1,2))
+X_input=tf.constant([[1,2.0]],shape=(1,2))
+y=layer.cal(X_input)
+print('output={}'.format(y.numpy()))
+#-------------------------------------------------
+#-------------------------------------------------
+#-------------------------------------------------
+### Defining a model using subclassing ###
+class subclassmodel(tf.keras.Model):
+  def __init__(self,num_outputs):
+    super(subclassmodel,self).__init__()
+    self.dense_layer=tf.keras.layers.Dense(num_outputs,activation='sigmoid')
+
+  def cal(self,input,isidentity=False):
+    X=self.dense_layer(input)
+    if isidentity:
+      return input
+    return X
+
+
+n_output=3
+mdl=subclassmodel(n_output)
+X=tf.constant([[1,2.0]],shape=(1,2))
+out1=mdl.cal(X)
+out2=mdl.cal(X,isidentity=True)
+print("Network output with activation: {}; network identity output: {}".format(out1.numpy(),out2.numpy()))
+
+#--------------------------------
+#--------------------------------
+#------------------------------
+#Gradient
+x=tf.Variable(3.0)
+with tf.GradientTape() as tape:
+  #define function
+  y=x*x
+dy_dx=tape.gradient(y,x)
+print(dy_dx)
+#------------------------------
+#------------------------------
+#------------------------------
+### Function minimization with automatic differentiation and SGD ###
+x=tf.Variable(tf.random.normal([1]))
+print("Initializing x={}".format(x.numpy()))
+lrate=1e-2
+f_v=4
+hist=[]
+
+for i in range(500):
+  with tf.GradientTape() as tape:
+    loss=(x-f_v)**2
+  dy_dx=tape.gradient(loss,x)
+  new_x=x-lrate*dy_dx
+  x.assign(new_x) # update the value of x
+  hist.append(x.numpy()[0])
+  
+print('final x=',x)
+plt.pyplot.plot(hist)
+plt.pyplot.plot([0, 500],[f_v,f_v])
+plt.pyplot.legend(('Predicted', 'True'))
+plt.pyplot.xlabel('Iteration')
+plt.pyplot.ylabel('x value')
