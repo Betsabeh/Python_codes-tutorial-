@@ -1,0 +1,2 @@
+Useful links for learning and exercising the Machine learning task with python:
+1-  Kaggel : Intro to Machine Learning: https://www.kaggle.com/learn/intro-to-machine-learning
