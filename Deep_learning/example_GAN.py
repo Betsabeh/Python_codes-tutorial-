@@ -1,4 +1,4 @@
-# this file contains codes for simple GNN network
+# this file contains codes for simple GAN network
 import tensorflow as tf
 import numpy as np
 import tensorflow_datasets as tfds
